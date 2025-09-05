@@ -1,0 +1,70 @@
+robot_pet_homeguard/                     # Thư mục gốc dự án Robot Pet HomeGuard
+│
+├── ai_response.wav                      # File giọng nói AI đã tạo (output từ TTS)
+├── README.md                            # Giới thiệu tổng quan dự án, cách chạy
+├── requirements.txt                     # Danh sách thư viện Python cần cài (torch, transformers, pyttsx3,…)
+│
+├── database/                            # Quản lý cơ sở dữ liệu
+│   └── schema.sql                       # Định nghĩa bảng: sensor_data, behavior_log, voice_log, actuator_commands
+│
+├── phân tích/                           # Tài liệu mô tả & phân tích hệ thống
+│   ├── architecture.md                  # Mô tả kiến trúc, sơ đồ class / module
+│   └── setup_guide.md                   # Hướng dẫn cài đặt (ESP32, Laptop AI, Database)
+│
+├── esp32_firmware/                      # Code chạy trên ESP32 (Arduino/ESP-IDF, C++)
+│   ├── config.h                         # Cấu hình Wi-Fi, MQTT broker, hằng số
+│   ├── main.cpp                         # Chương trình chính: setup(), loop(), gọi sensor + actuator
+│   │
+│   ├── actuators/                       # Bộ phận điều khiển (Actuator)
+│   │   ├── Motor.cpp / Motor.h          # Class Motor: điều khiển robot di chuyển
+│   │   ├── Servo.cpp / Servo.h          # Class Servo: điều khiển góc quay (camera, tay robot)
+│   │
+│   └── sensors/                         # Bộ phận cảm biến (Sensor)
+│       ├── Camera.cpp / Camera.h        # Class Camera: chụp ảnh / stream video
+│       ├── Microphone.cpp / Microphone.h# Class Microphone: thu âm, xử lý âm thanh
+│       ├── MotionSensor.cpp / .h        # Class MotionSensor: phát hiện chuyển động (PIR)
+│
+├── laptop_ai/                           # Laptop chạy AI (Python, OOP)
+│   ├── config.py                        # File cấu hình (model paths, DB, MQTT broker,…)
+│   ├── main.py                          # Entry point Python: chạy RobotController (AI + Speech + Giao tiếp)
+│   ├── __init__.py                      # Đánh dấu package Python
+│   │
+│   ├── audio/                           # Module xử lý âm thanh (record/playback)
+│   │   ├── player.py                    # Class AudioPlayer: phát file .wav qua loa
+│   │   ├── recorder.py                  # Class Recorder: thu âm micro → file .wav
+│   │   ├── __init__.py                  # Đánh dấu package Python
+│   │   └── __pycache__/                 # Cache biên dịch Python
+│   │
+│   ├── communication/                   # Module giao tiếp (ESP32 ↔ Laptop AI)
+│   │   ├── mqtt_client.py               # Class MQTTClient: publish/subscribe với ESP32
+│   │   ├── websocket_client.py          # Class WebSocketClient: kết nối WebSocket (tuỳ chọn)
+│   │   └── __init__.py
+│   │
+│   ├── model/                           # Module AI (Computer Vision / NLP)
+│   ├── nlp_parser.py        # Class NLPParser: phân tích câu lệnh giọng nói
+│   │   ├── behavior.py                  # Class BehaviorAnalyzer: phân tích hành vi từ sensor
+│   │   ├── detector.py                  # PersonDetector, PetDetector: phát hiện người/thú cưng
+│   │   ├── qwen_ai.py                   # Qwen3Chat: hội thoại AI, reasoning
+│   │   ├── __init__.py
+│   │   └── __pycache__/
+│   │
+│   ├── speech/                          # Module xử lý giọng nói
+│   │   ├── robot_voice.wav              # File giọng nói gần nhất robot phát ra
+│   │   ├── stt_whisper.py               # Class PhoWhisperSTT: giọng nói → text
+│   │   ├── test.py                      # Script test riêng speech module
+│   │   ├── tts_pyttsx3.py               # Class TTS: text → giọng nói (pyttsx3)
+│   │   ├── voice_assistant.py           # Class VoiceAssistant: kết hợp STT + Qwen3 + TTS
+│   │   ├── __init__.py
+│   │   └── __pycache__/
+│   │
+│   └── utils/                           # Module tiện ích chung
+│       ├── logger.py                    # Class Logger: ghi log (console, file)
+│       ├── video_stream.py              # Class VideoStreamHandler: nhận & xử lý video stream
+│       └── __init__.py
+│
+├── recordings/                          # Lưu file âm thanh thu từ micro (theo timestamp)
+│   ├── recording_20250905_013237.wav
+│   ├── recording_20250905_035732.wav
+│   ├── recording_20250905_041605.wav
+│   ├── recording_20250905_042012.wav
+│   └── recording_20250905_162536.wav
