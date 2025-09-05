@@ -24,24 +24,8 @@ class PhoWhisperSTT:
         :return: text (string)
         """
         try:
-            result = self.transcriber(filename, generate_kwargs={"language": "vi"})
+            result = self.transcriber(filename, generate_kwargs={"language": "vi"}) #chuyển âm thanh thành văn bản rồi lưu vài biến
             text = result["text"]
             return text.strip()
         except Exception as e:
             return f"❌ Lỗi nhận dạng: {e}"
-
-    def record_and_transcribe(self, duration=5, filename="recorded.wav"):
-        """
-        Ghi âm trực tiếp và trả về text
-        :param duration: thời gian ghi âm (giây)
-        :param filename: file wav trung gian
-        """
-        wav_file = self.record_audio(duration, filename)
-        return self.transcribe(wav_file)
-
-
-# Test nhanh khi chạy trực tiếp file này
-if __name__ == "__main__":
-    stt = PhoWhisperSTT()
-    text = stt.record_and_transcribe(duration=5)
-    print("📝 Kết quả:", text)
