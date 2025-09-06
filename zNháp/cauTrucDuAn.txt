@@ -41,7 +41,8 @@ robot_pet_homeguard/                     # Thư mục gốc dự án Robot Pet H
 │   │   └── __init__.py
 │   │
 │   ├── model/                           # Module AI (Computer Vision / NLP)
-│   ├── nlp_parser.py        # Class NLPParser: phân tích câu lệnh giọng nói
+│   ├── ├── nlp_parser.py               # Class NLPParser: phân tích câu lệnh giọng nói
+│   │   ├── recognizer.py
 │   │   ├── behavior.py                  # Class BehaviorAnalyzer: phân tích hành vi từ sensor
 │   │   ├── detector.py                  # PersonDetector, PetDetector: phát hiện người/thú cưng
 │   │   ├── qwen_ai.py                   # Qwen3Chat: hội thoại AI, reasoning
