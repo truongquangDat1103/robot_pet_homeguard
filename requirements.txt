@@ -15,3 +15,7 @@ pyttsx3                                                          # Chuyển văn
 soundfile                                                        # Đọc và ghi file âm thanh (.wav, .flac...) dưới dạng NumPy array, dùng chung với sounddevice
 
 opencv-python                                                    # Thư viện xử lý ảnh/video, nhận diện khuôn mặt, vật thể, truy cập webcam, vẽ khung...
+
+deepface                                                        # Nhận diện khuôn mặt, phân tích cảm xúc, tuổi, giới tính từ ảnh hoặc video     
+
+tf-keras                                                        # Thư viện học sâu cao cấp, dễ dùng, xây dựng trên TensorFlow để tạo và huấn luyện mô hình AI

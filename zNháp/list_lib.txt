@@ -1,5 +1,0 @@
-pip install sounddevice
-pip install scipy
-pip install transformers
-pip install ollama
-pip install pyttsx3

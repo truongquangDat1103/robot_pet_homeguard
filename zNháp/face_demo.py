@@ -1,42 +1,37 @@
 import cv2
-import face_recognition
-
-# Tải ảnh mẫu
-known_image = face_recognition.load_image_file("person.jpg")
-known_encoding = face_recognition.face_encodings(known_image)[0]
+from deepface import DeepFace
 
 # Mở webcam
-video_capture = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0)
+
+# Tải ảnh mẫu của người muốn nhận diện
+target_image = "person.jpg"  # ảnh rõ mặt
 
 while True:
-    ret, frame = video_capture.read()
+    ret, frame = cap.read()
     if not ret:
         break
 
-    # Chuyển sang RGB (OpenCV đọc BGR)
-    rgb_frame = frame[:, :, ::-1]
+    # Lưu frame tạm để DeepFace xử lý
+    cv2.imwrite("temp.jpg", frame)
 
-    # Phát hiện khuôn mặt
-    face_locations = face_recognition.face_locations(rgb_frame)
-    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+    try:
+        result = DeepFace.verify("temp.jpg", target_image, enforce_detection=False)
+        if result["verified"]:
+            label = "Đã biết"
+        else:
+            label = "Người lạ"
+    except:
+        label = "Không phát hiện mặt"
 
-    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-        # So sánh khuôn mặt
-        matches = face_recognition.compare_faces([known_encoding], face_encoding)
+    # Vẽ khung + label
+    cv2.putText(frame, label, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
 
-        name = "Người lạ"
-        if matches[0]:
-            name = "Đã biết"
+    cv2.imshow("DeepFace Webcam", frame)
 
-        # Vẽ khung + label
-        cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-        cv2.putText(frame, name, (left, top-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0), 2)
-
-    cv2.imshow("Nhận diện khuôn mặt", frame)
-
-    # Bấm Q để thoát
+    # Nhấn Q để thoát
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-video_capture.release()
+cap.release()
 cv2.destroyAllWindows()
