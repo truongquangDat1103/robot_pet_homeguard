@@ -1,51 +1,37 @@
 import os
-from deepface import DeepFace
 import cv2
+from deepface import DeepFace
+import numpy as np
 
 
 class FaceRecognizer:
-    """
-    Lớp FaceRecognizer sử dụng DeepFace để:
-    - Nhận diện danh tính khuôn mặt (face recognition)
-    - Phát hiện khuôn mặt trong ảnh / camera
-    """
-
-    def __init__(self, db_path: str = "known_faces", model_name: str = "Facenet"):
-        """
-        :param db_path: Thư mục chứa ảnh khuôn mặt đã biết (DeepFace sẽ dùng để so sánh)
-        :param model_name: Tên model backbone (VGG-Face, Facenet, ArcFace, Dlib, OpenFace…)
-        """
+    def __init__(self, db_path="known_faces", model_name="Facenet"):
         self.db_path = db_path
         self.model_name = model_name
+        self.embeddings = []
 
         if not os.path.exists(db_path):
             os.makedirs(db_path)
             print(f"⚠️ Thư mục {db_path} chưa có, tạo mới...")
 
-    def recognize_from_image(self, image_path: str):
-        """
-        Nhận diện khuôn mặt từ ảnh tĩnh
-        :param image_path: đường dẫn ảnh
-        :return: kết quả DeepFace.verify hoặc DeepFace.find
-        """
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Không tìm thấy ảnh: {image_path}")
+        self._load_known_faces()
 
-        results = DeepFace.find(img_path=image_path,
-                                db_path=self.db_path,
-                                model_name=self.model_name,
-                                enforce_detection=False)
+    def _load_known_faces(self):
+        """Tạo embedding cho tất cả ảnh trong db"""
+        for file in os.listdir(self.db_path):
+            path = os.path.join(self.db_path, file)
+            if os.path.isfile(path):
+                try:
+                    rep = DeepFace.represent(img_path=path, model_name=self.model_name, enforce_detection=False)
+                    self.embeddings.append({"name": os.path.splitext(file)[0], "embedding": rep[0]["embedding"]})
+                except Exception as e:
+                    print(f"Lỗi khi load {file}: {e}")
 
-        if len(results) > 0 and not results[0].empty:
-            return results[0].to_dict(orient="records")  # Trả về danh sách khuôn mặt match
-        else:
-            return []
+    def _cosine_similarity(self, emb1, emb2):
+        emb1, emb2 = np.array(emb1), np.array(emb2)
+        return np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
 
-    def recognize_from_camera(self, camera_id: int = 0):
-        """
-        Nhận diện khuôn mặt trực tiếp từ webcam/camera
-        Nhấn 'q' để thoát
-        """
+    def recognize_from_camera(self, camera_id=0, threshold=0.7):
         cap = cv2.VideoCapture(camera_id)
 
         while True:
@@ -54,16 +40,24 @@ class FaceRecognizer:
                 break
 
             try:
-                results = DeepFace.find(img_path=frame,
-                                        db_path=self.db_path,
-                                        model_name=self.model_name,
-                                        enforce_detection=False)
+                # Tạo embedding cho frame hiện tại
+                rep = DeepFace.represent(frame, model_name=self.model_name, enforce_detection=False)
 
-                if len(results) > 0 and not results[0].empty:
-                    identity = results[0].iloc[0]["identity"]
-                    name = os.path.basename(identity).split(".")[0]
+                if rep:
+                    face_emb = rep[0]["embedding"]
+                    best_match, best_score = "Unknown", 0
+
+                    for item in self.embeddings:
+                        score = self._cosine_similarity(face_emb, item["embedding"])
+                        if score > best_score:
+                            best_match, best_score = item["name"], score
+
+                    if best_score >= threshold:
+                        name = best_match
+                    else:
+                        name = "Unknown"
                 else:
-                    name = "Unknown"
+                    name = "No face"
 
                 cv2.putText(frame, name, (30, 50),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
@@ -72,22 +66,9 @@ class FaceRecognizer:
                 cv2.putText(frame, f"Lỗi: {str(e)}", (30, 50),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-            cv2.imshow("DeepFace Recognition", frame)
-
+            cv2.imshow("Face Recognition", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
         cap.release()
         cv2.destroyAllWindows()
-
-
-# Test nhanh
-if __name__ == "__main__":
-    recog = FaceRecognizer(db_path="known_faces", model_name="Facenet")
-
-    test_img = "test_face.jpg"
-    if os.path.exists(test_img):
-        results = recog.recognize_from_image(test_img)
-        print("🔎 Kết quả:", results)
-    else:
-        print("⚠️ Không tìm thấy ảnh test")
