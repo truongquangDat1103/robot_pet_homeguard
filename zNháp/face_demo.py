@@ -16,16 +16,16 @@ while True:
     cv2.imwrite("temp.jpg", frame)
 
     try:
-        result = DeepFace.verify("temp.jpg", target_image, enforce_detection=False)
+        result = DeepFace.verify(img1_path="temp.jpg", img2_path=target_image, enforce_detection=False)
         if result["verified"]:
-            label = "Đã biết"
+            label = "Known"
         else:
-            label = "Người lạ"
+            label = "Stranger"
     except:
-        label = "Không phát hiện mặt"
+        label = "No face detected"
 
     # Vẽ khung + label
-    cv2.putText(frame, label, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+    cv2.putText(frame, label, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     cv2.imshow("DeepFace Webcam", frame)
 
@@ -33,5 +33,6 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Giải phóng tài nguyên
 cap.release()
 cv2.destroyAllWindows()
