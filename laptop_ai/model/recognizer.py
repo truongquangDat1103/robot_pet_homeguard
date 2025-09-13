@@ -14,22 +14,25 @@ class FaceRecognizer:
             os.makedirs(db_path)
             print(f"⚠️ Thư mục {db_path} chưa có, tạo mới...")
 
-        self._load_known_faces()
+        self._load_known_faces() #chạy hàm tạo embeding
 
     def _load_known_faces(self):
         """Tạo embedding cho tất cả ảnh trong db"""
         for file in os.listdir(self.db_path):
-            path = os.path.join(self.db_path, file)
-            if os.path.isfile(path):
+            path = os.path.join(self.db_path, file) #join dùng để nối các phần của đường dẫn lại với nhau, sau khi nối thì path sẽ có  đường dẫn đầy đủ
+            if os.path.isfile(path):                 #kiểm tra xem path có phải là file không, chỉ xử lý file, bỏ qua thư mục con
                 try:
-                    rep = DeepFace.represent(img_path=path, model_name=self.model_name, enforce_detection=False)
-                    self.embeddings.append({"name": os.path.splitext(file)[0], "embedding": rep[0]["embedding"]})
+                    rep = DeepFace.represent(img_path=path, model_name=self.model_name, enforce_detection=False) #tạo embedding cho ảnh
+                    self.embeddings.append({                # thêm embedding vào danh sách, append là thêm phần tử vào cuối danh sách   
+                        "name": os.path.splitext(file)[0],   # tên file (bỏ đuôi) làm nhãn
+                        "embedding": rep[0]["embedding"]     # vector 128D/512D (tuỳ model)
+                    })
                 except Exception as e:
                     print(f"Lỗi khi load {file}: {e}")
 
-    def _cosine_similarity(self, emb1, emb2):
-        emb1, emb2 = np.array(emb1), np.array(emb2)
-        return np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
+    def _cosine_similarity(self, emb1, emb2):   #Hàm này nhận vào hai vector emb1 và emb2 (đại diện cho hai khuôn mặt),
+        emb1, emb2 = np.array(emb1), np.array(emb2) #Chuyển đổi emb1 và emb2 từ kiểu list sang kiểu NumPy array
+        return np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2)) #tích vô hướng của hai vector chia cho tích của độ dài (norm) của chúng, Kết quả nằm trong khoảng từ -1 đến 1, càng gần 1 thì hai khuôn mặt càng giống nhau.
 
     def recognize_from_camera(self, camera_id=0, threshold=0.7):
         cap = cv2.VideoCapture(camera_id)
