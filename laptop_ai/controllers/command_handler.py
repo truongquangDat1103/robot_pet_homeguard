@@ -5,7 +5,7 @@ class CommandHandler:
         """lấy dữ liêuj lệnh từ ai_response"""
         intent = ai_response['command']['intent']
         command = ai_response['command']['command']
-        params = ai_response['command']['params']
+        params = ai_response['command'].get('params', {}) # Lấy params nếu có, nếu không có thì trả về dict rỗng
         if intent == "control_device":
             match command:
                 case "enable_face_recognition":

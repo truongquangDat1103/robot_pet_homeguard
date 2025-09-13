@@ -17,7 +17,7 @@ class Qwen3Chat:
                                     "command": {
                                         "intent": "string (vd: control_device, query_info, conversation, security_alert, ...)",
                                         "command": "string (hành động chính, vd: turn_on_light, move_forward, ask_weather, chitchat,enable_face_recognition,enable_motion_detection)",
-                                        "params": { "key": "value" }  // Tham số kèm theo (có thể rỗng)
+                                        "params": { "key": "value" }  // Tham số kèm theo, không có thì "params": {}
                                     }
                                     }
 
