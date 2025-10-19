@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import os
 import sys
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from paho.mqtt.client import Client as MqttClient
 
@@ -204,12 +204,56 @@ def _gen_motion_stream():
 
 @app.get("/stream/face")
 def stream_face():
-    return _mjpeg_response(_gen_face_stream())
+    # Prefer frames ingested from laptop_ai if available
+    return _mjpeg_response(_gen_ingest_stream("face"))
 
 
 @app.get("/stream/motion")
 def stream_motion():
-    return _mjpeg_response(_gen_motion_stream())
+    # Prefer frames ingested from laptop_ai if available
+    return _mjpeg_response(_gen_ingest_stream("motion"))
+
+
+# ---------------- Video ingest path from laptop_ai ----------------
+_latest_frames: dict[str, Optional[bytes]] = {"face": None, "motion": None}
+_conds: dict[str, asyncio.Condition] = {"face": asyncio.Condition(), "motion": asyncio.Condition()}
+
+
+@app.post("/ingest/{kind}")
+async def ingest_frame(kind: str, request: Request):
+    kind = kind.lower()
+    if kind not in ("face", "motion"):
+        return {"ok": False, "error": "invalid kind"}
+    data = await request.body()
+    if not data:
+        return {"ok": False, "error": "empty body"}
+    _latest_frames[kind] = data
+    # notify waiting streamers
+    cond = _conds[kind]
+    async with cond:
+        cond.notify_all()
+    return {"ok": True, "size": len(data)}
+
+
+async def _gen_ingest_stream(kind: str):
+    boundary = b"--frame\r\n"
+    ct = b"Content-Type: image/jpeg\r\n\r\n"
+    cond = _conds[kind]
+    # wait for first frame
+    while True:
+        frame = _latest_frames.get(kind)
+        if frame:
+            yield boundary + ct + frame + b"\r\n"
+            break
+        async with cond:
+            await cond.wait()
+    # stream subsequent frames when updated
+    while True:
+        async with cond:
+            await cond.wait()
+            frame = _latest_frames.get(kind)
+        if frame:
+            yield boundary + ct + frame + b"\r\n"
 
 
 def publish_cmd(path: str, payload: dict):

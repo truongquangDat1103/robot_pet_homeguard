@@ -21,3 +21,5 @@ deepface                                                        # Nhận diện 
 tf-keras                                                        # Thư viện học sâu cao cấp, dễ dùng, xây dựng trên TensorFlow để tạo và huấn luyện mô hình AI
 
 mediapipe                                                       #model nhận diện cử chỉ tay, khuôn mặt, tư thế cơ thể thời gian thực từ ảnh/video
+requests                                                        # HTTP client to push frames to dashboard ingest endpoints
+
