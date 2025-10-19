@@ -45,6 +45,29 @@
     </header>
     <main>
       <div class="grid">
+        <div class="card" id="card-cam-raw">
+          <h3>ESP32-CAM Raw</h3>
+          <div class="sub small">Nguồn: http://172.20.10.2:81/stream</div>
+          <div style="margin-top:8px">
+            <img id="img-raw" src="http://172.20.10.2:81/stream" alt="ESP32 Stream" style="width:100%; border-radius:8px; border:1px solid var(--line)"/>
+          </div>
+        </div>
+
+        <div class="card" id="card-cam-face">
+          <h3>Nhận diện khuôn mặt</h3>
+          <div class="sub small">Nguồn: ESP32-CAM qua LaptopAI</div>
+          <div style="margin-top:8px">
+            <img id="img-face" src="/stream/face" alt="Face Stream" style="width:100%; border-radius:8px; border:1px solid var(--line)"/>
+          </div>
+        </div>
+
+        <div class="card" id="card-cam-motion">
+          <h3>Phát hiện chuyển động</h3>
+          <div class="sub small">Nguồn: ESP32-CAM qua LaptopAI</div>
+          <div style="margin-top:8px">
+            <img id="img-motion" src="/stream/motion" alt="Motion Stream" style="width:100%; border-radius:8px; border:1px solid var(--line)"/>
+          </div>
+        </div>
         <div class="card" id="card-temp">
           <h3>🌡️ Temperature</h3>
           <div class="row"><div><span class="value" id="temp-val">--</span><span class="unit">°C</span></div><span class="chip muted" id="temp-chip">waiting</span></div>
