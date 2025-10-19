@@ -43,7 +43,6 @@ class FaceRecognizer:                          #     định nghĩa class FaceRe
                 except Exception as e:                                #     nếu lỗi
                     print(f"Lỗi khi load {file}: {e}")                #     in ra lỗi
 
-
     def _cosine_similarity(self, emb1, emb2):                         #     tính độ tương đồng giữa 2 vector embedding
         emb1, emb2 = np.array(emb1), np.array(emb2)                   #     chuyển list → numpy array
         return np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))     #     công thức tính cosine similarity
