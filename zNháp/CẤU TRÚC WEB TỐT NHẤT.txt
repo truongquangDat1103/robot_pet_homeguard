@@ -1,0 +1,286 @@
+robot_pet_homeguard_web/
+│
+├── README.md
+├── package.json                    # Root package.json cho monorepo
+├── pnpm-workspace.yaml             # PNPM workspace config
+├── turbo.json                      # Turborepo config
+├── .env.example
+├── .gitignore
+├── docker-compose.yml              # Docker setup cho toàn bộ stack
+│
+├── apps/                           # Application Layer
+│   ├── web/                        # Next.js Frontend
+│   │   ├── package.json
+│   │   ├── next.config.js
+│   │   ├── tsconfig.json
+│   │   ├── tailwind.config.ts
+│   │   ├── .env.local
+│   │   │
+│   │   ├── public/
+│   │   │   ├── images/
+│   │   │   ├── sounds/
+│   │   │   └── icons/
+│   │   │
+│   │   ├── src/
+│   │   │   ├── app/                # Next.js 14 App Router
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── globals.css
+│   │   │   │   │
+│   │   │   │   ├── (dashboard)/   # Route groups
+│   │   │   │   │   ├── layout.tsx
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   ├── sensors/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── camera/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── behaviors/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── logs/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── settings/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   │
+│   │   │   │   ├── api/            # API Routes
+│   │   │   │   │   ├── health/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── auth/
+│   │   │   │   │       └── [...nextauth]/
+│   │   │   │   │           └── route.ts
+│   │   │   │   │
+│   │   │   │   └── (auth)/
+│   │   │   │       ├── login/
+│   │   │   │       │   └── page.tsx
+│   │   │   │       └── register/
+│   │   │   │           └── page.tsx
+│   │   │   │
+│   │   │   ├── components/         # React Components
+│   │   │   │   ├── ui/             # Shadcn/ui components
+│   │   │   │   │   ├── button.tsx
+│   │   │   │   │   ├── card.tsx
+│   │   │   │   │   ├── chart.tsx
+│   │   │   │   │   └── ...
+│   │   │   │   │
+│   │   │   │   ├── features/       # Feature components
+│   │   │   │   │   ├── sensors/
+│   │   │   │   │   │   ├── SensorCard.tsx
+│   │   │   │   │   │   ├── SensorChart.tsx
+│   │   │   │   │   │   └── SensorGrid.tsx
+│   │   │   │   │   │
+│   │   │   │   │   ├── camera/
+│   │   │   │   │   │   ├── LiveStream.tsx
+│   │   │   │   │   │   ├── FaceRecognition.tsx
+│   │   │   │   │   │   └── MotionDetection.tsx
+│   │   │   │   │   │
+│   │   │   │   │   ├── robot/
+│   │   │   │   │   │   ├── RobotControl.tsx
+│   │   │   │   │   │   ├── BehaviorDisplay.tsx
+│   │   │   │   │   │   └── EmotionDisplay.tsx
+│   │   │   │   │   │
+│   │   │   │   │   └── voice/
+│   │   │   │   │       ├── VoiceCommands.tsx
+│   │   │   │   │       └── ConversationHistory.tsx
+│   │   │   │   │
+│   │   │   │   └── layout/         # Layout components
+│   │   │   │       ├── Header.tsx
+│   │   │   │       ├── Sidebar.tsx
+│   │   │   │       ├── Footer.tsx
+│   │   │   │       └── DashboardLayout.tsx
+│   │   │   │
+│   │   │   ├── hooks/              # Custom React Hooks
+│   │   │   │   ├── useWebSocket.ts
+│   │   │   │   ├── useSensorData.ts
+│   │   │   │   ├── useCamera.ts
+│   │   │   │   └── useRobotControl.ts
+│   │   │   │
+│   │   │   ├── lib/                # Utilities & Configs
+│   │   │   │   ├── websocket.ts
+│   │   │   │   ├── api-client.ts
+│   │   │   │   ├── utils.ts
+│   │   │   │   └── constants.ts
+│   │   │   │
+│   │   │   ├── stores/             # State Management (Zustand)
+│   │   │   │   ├── useSensorStore.ts
+│   │   │   │   ├── useRobotStore.ts
+│   │   │   │   ├── useAuthStore.ts
+│   │   │   │   └── useUIStore.ts
+│   │   │   │
+│   │   │   └── types/              # TypeScript Types
+│   │   │       ├── sensor.ts
+│   │   │       ├── robot.ts
+│   │   │       ├── websocket.ts
+│   │   │       └── api.ts
+│   │   │
+│   │   └── .eslintrc.js
+│   │
+│   └── api/                        # Backend WebSocket Server (Node.js/Bun)
+│       ├── package.json
+│       ├── tsconfig.json
+│       ├── .env
+│       │
+│       ├── src/
+│       │   ├── index.ts            # Entry point
+│       │   ├── app.ts              # Express/Fastify app setup
+│       │   │
+│       │   ├── config/
+│       │   │   ├── database.ts
+│       │   │   ├── redis.ts
+│       │   │   └── websocket.ts
+│       │   │
+│       │   ├── controllers/        # HTTP Controllers
+│       │   │   ├── auth.controller.ts
+│       │   │   ├── sensor.controller.ts
+│       │   │   ├── robot.controller.ts
+│       │   │   └── logs.controller.ts
+│       │   │
+│       │   ├── services/           # Business Logic
+│       │   │   ├── esp32.service.ts
+│       │   │   ├── laptop-ai.service.ts
+│       │   │   ├── sensor.service.ts
+│       │   │   ├── camera.service.ts
+│       │   │   └── notification.service.ts
+│       │   │
+│       │   ├── websocket/          # WebSocket Handlers
+│       │   │   ├── index.ts
+│       │   │   ├── esp32.handler.ts      # ESP32 connection
+│       │   │   ├── laptop.handler.ts     # Laptop AI connection
+│       │   │   ├── client.handler.ts     # Web client connection
+│       │   │   └── message-router.ts     # Route messages between connections
+│       │   │
+│       │   ├── models/             # Database Models (Prisma/TypeORM)
+│       │   │   ├── User.ts
+│       │   │   ├── SensorData.ts
+│       │   │   ├── BehaviorLog.ts
+│       │   │   ├── VoiceLog.ts
+│       │   │   └── ActuatorCommand.ts
+│       │   │
+│       │   ├── routes/             # API Routes
+│       │   │   ├── index.ts
+│       │   │   ├── auth.routes.ts
+│       │   │   ├── sensor.routes.ts
+│       │   │   ├── robot.routes.ts
+│       │   │   └── logs.routes.ts
+│       │   │
+│       │   ├── middleware/
+│       │   │   ├── auth.middleware.ts
+│       │   │   ├── error.middleware.ts
+│       │   │   ├── rate-limit.middleware.ts
+│       │   │   └── validation.middleware.ts
+│       │   │
+│       │   ├── utils/
+│       │   │   ├── logger.ts
+│       │   │   ├── validation.ts
+│       │   │   └── helpers.ts
+│       │   │
+│       │   └── types/
+│       │       ├── index.ts
+│       │       ├── websocket.types.ts
+│       │       └── api.types.ts
+│       │
+│       ├── prisma/                 # Database Schema
+│       │   ├── schema.prisma
+│       │   └── migrations/
+│       │
+│       └── tests/
+│           ├── unit/
+│           └── integration/
+│
+├── packages/                       # Shared Packages
+│   ├── ui/                         # Shared UI Components
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── Button/
+│   │   │   ├── Card/
+│   │   │   └── Chart/
+│   │   └── README.md
+│   │
+│   ├── types/                      # Shared TypeScript Types
+│   │   ├── package.json
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── sensor.types.ts
+│   │   │   ├── robot.types.ts
+│   │   │   └── websocket.types.ts
+│   │   └── tsconfig.json
+│   │
+│   ├── utils/                      # Shared Utilities
+│   │   ├── package.json
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── validators.ts
+│   │   │   ├── formatters.ts
+│   │   │   └── constants.ts
+│   │   └── tsconfig.json
+│   │
+│   └── config/                     # Shared Configs
+│       ├── eslint-config/
+│       ├── typescript-config/
+│       └── tailwind-config/
+│
+├── services/                       # External Services Integration
+│   └── laptop-ai-adapter/          # Adapter cho Python AI service
+│       ├── package.json
+│       ├── src/
+│       │   ├── index.ts
+│       │   ├── websocket-client.ts
+│       │   └── message-parser.ts
+│       └── README.md
+│
+├── database/                       # Database Setup
+│   ├── schema.sql
+│   ├── migrations/
+│   ├── seeds/
+│   │   ├── users.seed.sql
+│   │   └── settings.seed.sql
+│   └── README.md
+│
+├── docs/                           # Documentation
+│   ├── API.md
+│   ├── WEBSOCKET.md
+│   ├── DEPLOYMENT.md
+│   ├── ARCHITECTURE.md
+│   └── CONTRIBUTING.md
+│
+├── scripts/                        # Build & Deploy Scripts
+│   ├── setup.sh
+│   ├── build.sh
+│   ├── deploy.sh
+│   └── seed-database.sh
+│
+└── infrastructure/                 # Infrastructure as Code
+    ├── docker/
+    │   ├── Dockerfile.web
+    │   ├── Dockerfile.api
+    │   └── Dockerfile.nginx
+    │
+    ├── kubernetes/
+    │   ├── deployment.yaml
+    │   ├── service.yaml
+    │   └── ingress.yaml
+    │
+    └── nginx/
+        └── nginx.conf 
+
+Dự án này được thiết kế theo mô hình Monorepo + Turborepo + PNPM Workspaces, nghĩa là:
+
+Toàn bộ frontend, backend, shared packages, scripts, docs,… nằm trong một repo duy nhất.
+
+Mỗi phần (ứng dụng hoặc thư viện) là một package độc lập, có package.json riêng.
+
+Turborepo quản lý việc build, cache và chạy song song các apps.
+
+Docker Compose + Kubernetes hỗ trợ triển khai toàn bộ hệ thống.
+---------------------------------------------------------------------
+
+hỏa mãn 4 nguyên tắc của enterprise-grade architecture:
+
+Separation of concerns – Phân tách rõ từng tầng:
+apps (frontend/backend) ↔ packages (shared libs) ↔ infra (triển khai).
+
+Scalability – Dễ mở rộng thêm module hoặc microservice (chỉ cần thêm package).
+
+Reusability – Các module như UI, types, utils dùng lại được ở mọi nơi.
+
+CI/CD friendly – Build, test, deploy tách biệt, có thể cache hoặc chạy song song.

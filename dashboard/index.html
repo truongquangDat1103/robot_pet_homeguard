@@ -1,0 +1,273 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>RoboHome Assistant</title>
+    <style>
+      :root {
+        --bg: #0f1115; --card:#171923; --text:#e6e8ee; --muted:#9aa3b2;
+        --ok:#2ecc71; --warn:#f1c40f; --bad:#e74c3c; --accent:#5b8cff;
+        --line:#232636;
+      }
+      * { box-sizing: border-box; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+      header { display:flex; align-items:center; justify-content:space-between; padding: 20px 24px; border-bottom: 1px solid var(--line); }
+      h1 { font-size: 20px; margin:0; letter-spacing: 0.3px; }
+      .status { font-size: 13px; color: var(--muted); }
+      .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:#1e2230; }
+      .dot { width:8px; height:8px; border-radius:50%; background: var(--bad); }
+
+      main { padding: 20px; max-width: 1100px; margin: 0 auto; }
+      .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap:16px; }
+      .card { background: var(--card); border:1px solid var(--line); border-radius: 12px; padding:16px; }
+      .card h3 { margin:0 0 8px; font-size:16px; font-weight:600; display:flex; align-items:center; gap:8px; }
+      .sub { color: var(--muted); font-size:12px; }
+      .row { display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+      .value { font-size:28px; font-weight:700; letter-spacing:0.5px; }
+      .unit { font-size:14px; color: var(--muted); margin-left:6px; font-weight:500; }
+      .bar { height:8px; background:#202537; border-radius:999px; overflow:hidden; margin-top:10px; }
+      .fill { height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #7aa2ff); transition: width .25s ease; }
+      .chip { padding:3px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+      .ok { background: rgba(46,204,113,.15); color: var(--ok); }
+      .warn { background: rgba(241,196,15,.15); color: var(--warn); }
+      .bad { background: rgba(231,76,60,.15); color: var(--bad); }
+      .muted { color: var(--muted); }
+      .small { font-size:12px; }
+      footer { text-align:center; color: var(--muted); font-size:12px; padding: 16px 0 28px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>RoboHome Assistant</h1>
+      <div class="status">
+        <span class="pill"><span id="dot" class="dot"></span><span id="status">Connecting...</span></span>
+      </div>
+    </header>
+    <main>
+      <div class="grid">
+        <div class="card" id="card-temp">
+          <h3>🌡️ Temperature</h3>
+          <div class="row"><div><span class="value" id="temp-val">--</span><span class="unit">°C</span></div><span class="chip muted" id="temp-chip">waiting</span></div>
+          <div class="bar"><div class="fill" id="temp-bar"></div></div>
+          <div class="sub small" id="temp-upd">—</div>
+        </div>
+
+        <div class="card" id="card-wifi">
+          <h3>📶 Wi‑Fi</h3>
+          <div class="row"><div class="small">SSID</div><div class="small" id="wifi-ssid">--</div></div>
+          <div class="row"><div class="small">IP</div><div class="small" id="wifi-ip">--</div></div>
+          <div class="row"><div class="small">RSSI</div><div><span class="value" id="wifi-rssi">--</span><span class="unit">dBm</span></div></div>
+          <div class="bar"><div class="fill" id="wifi-bar"></div></div>
+          <div class="sub small" id="wifi-upd">—</div>
+        </div>
+
+        <div class="card" id="card-controls">
+          <h3>🕹️ Controls</h3>
+          <div class="sub">Send commands to device via MQTT</div>
+          <div class="row" style="margin-top:10px">
+            <div class="small muted">Speaker volume</div>
+            <div>
+              <input id="vol" type="range" min="0" max="21" value="12" oninput="sendVolume(this.value)" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px; gap:8px; align-items:stretch">
+            <input id="url" placeholder="Stream URL (mp3, radio...)" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:#10131b; color:var(--text);" />
+            <button onclick="playUrl()" style="padding:8px 12px; border-radius:8px; background:var(--accent); color:white; border:0; cursor:pointer">Play</button>
+          </div>
+          <div class="row" style="margin-top:10px; gap:8px; align-items:stretch">
+            <input id="tts" placeholder="Say something..." style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:#10131b; color:var(--text);" />
+            <button onclick="speak()" style="padding:8px 12px; border-radius:8px; background:#1abc9c; color:white; border:0; cursor:pointer">Speak</button>
+          </div>
+        </div>
+
+        <div class="card" id="card-speaker">
+          <h3>🔊 Speaker</h3>
+          <div class="sub small">Now playing:</div>
+          <div class="small" id="spk-url" style="word-break: break-all;">--</div>
+          <div class="row"><div class="small">State</div><span class="chip muted" id="spk-state">idle</span></div>
+          <div class="row"><div class="small">Volume</div><div><span class="value" id="spk-vol">--</span></div></div>
+          <div class="bar"><div class="fill" id="spk-bar"></div></div>
+          <div class="sub small" id="spk-upd">—</div>
+        </div>
+
+        <div class="card" id="card-hum">
+          <h3>💧 Humidity</h3>
+          <div class="row"><div><span class="value" id="hum-val">--</span><span class="unit">%</span></div><span class="chip muted" id="hum-chip">waiting</span></div>
+          <div class="bar"><div class="fill" id="hum-bar"></div></div>
+          <div class="sub small" id="hum-upd">—</div>
+        </div>
+
+        <div class="card" id="card-gas">
+          <h3>🧪 Gas</h3>
+          <div class="row"><div><span class="value" id="gas-val">--</span><span class="unit">raw</span></div><span class="chip muted" id="gas-chip">waiting</span></div>
+          <div class="bar"><div class="fill" id="gas-bar"></div></div>
+          <div class="sub small" id="gas-upd">—</div>
+        </div>
+
+        <div class="card" id="card-dist">
+          <h3>📏 Distance</h3>
+          <div class="row"><div><span class="value" id="dist-val">--</span><span class="unit">cm</span></div><span class="chip muted" id="dist-chip">waiting</span></div>
+          <div class="bar"><div class="fill" id="dist-bar"></div></div>
+          <div class="sub small" id="dist-upd">—</div>
+        </div>
+
+        <div class="card" id="card-motion">
+          <h3>🕺 Motion</h3>
+          <div class="row"><div><span class="value" id="motion-val">--</span></div><span class="chip muted" id="motion-chip">waiting</span></div>
+          <div class="sub small" id="motion-upd">—</div>
+        </div>
+
+        <div class="card" id="card-flame">
+          <h3>🔥 Flame</h3>
+          <div class="row"><div><span class="value" id="flame-val">--</span></div><span class="chip muted" id="flame-chip">waiting</span></div>
+          <div class="sub small" id="flame-upd">—</div>
+        </div>
+
+        <div class="card" id="card-mic">
+          <h3>🎙️ Microphone</h3>
+          <div class="row"><div>RMS</div><div><span class="value" id="mic-rms">--</span></div></div>
+          <div class="bar"><div class="fill" id="mic-rms-bar"></div></div>
+          <div class="row" style="margin-top:8px"><div>Peak</div><div><span class="value" id="mic-peak">--</span></div></div>
+          <div class="bar"><div class="fill" id="mic-peak-bar"></div></div>
+          <div class="sub small" id="mic-upd">—</div>
+        </div>
+
+        <div class="card" id="card-screen">
+          <h3>🖼️ Screen</h3>
+          <div class="row"><div class="small">Video index</div><div class="small" id="scr-index">--</div></div>
+          <div class="row" style="gap:8px; margin-top:8px">
+            <input id="scr-idx" type="number" min="1" max="12" value="1" style="width:80px; padding:6px; border-radius:8px; border:1px solid var(--line); background:#10131b; color:var(--text);"/>
+            <button onclick="screenPlay()" style="padding:8px 12px; border-radius:8px; background:var(--accent); color:white; border:0; cursor:pointer">Play</button>
+            <button onclick="screenStop()" style="padding:8px 12px; border-radius:8px; background:#e67e22; color:white; border:0; cursor:pointer">Stop</button>
+          </div>
+          <div class="sub small" id="scr-upd" style="margin-top:8px">—</div>
+        </div>
+
+        <div class="card" id="card-system">
+          <h3>⚙️ System</h3>
+          <div class="row"><div class="small">Uptime</div><div class="small" id="sys-uptime">--</div></div>
+          <div class="row"><div class="small">Free heap</div><div class="small" id="sys-heap">--</div></div>
+          <div class="row" style="gap:8px; margin-top:8px">
+            <button onclick="arm(true)" style="padding:8px 12px; border-radius:8px; background:#e74c3c; color:white; border:0; cursor:pointer">Arm</button>
+            <button onclick="arm(false)" style="padding:8px 12px; border-radius:8px; background:#2ecc71; color:white; border:0; cursor:pointer">Disarm</button>
+            <button onclick="reboot()" style="padding:8px 12px; border-radius:8px; background:#8e44ad; color:white; border:0; cursor:pointer">Reboot</button>
+          </div>
+        </div>
+      </div>
+      <footer id="footer-note">MQTT: test.mosquitto.org • Topic base: homeguard/esp32 • App: RoboHome Assistant</footer>
+    </main>
+
+    <script>
+      const D = (id) => document.getElementById(id);
+      const statusEl = D('status');
+      const dotEl = D('dot');
+
+      function setStatus(txt, color) {
+        statusEl.textContent = txt;
+        dotEl.style.background = color;
+      }
+
+      function fmtTime() { const d = new Date(); return d.toLocaleTimeString(); }
+      function setChip(el, cls, text) {
+        el.className = 'chip ' + cls; el.textContent = text;
+      }
+      function setBar(el, pct) { el.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+
+      function updateDHT(t, h) {
+        if (typeof t === 'number') {
+          D('temp-val').textContent = t.toFixed(1);
+          const pct = (t / 50) * 100; setBar(D('temp-bar'), pct);
+          const chip = t < 30 ? 'ok' : (t < 35 ? 'warn' : 'bad');
+          setChip(D('temp-chip'), chip, chip);
+          D('temp-upd').textContent = 'Updated ' + fmtTime();
+        }
+        if (typeof h === 'number') {
+          D('hum-val').textContent = h.toFixed(1);
+          const pct = h; setBar(D('hum-bar'), pct);
+          const chip = (h >= 40 && h <= 70) ? 'ok' : 'warn';
+          setChip(D('hum-chip'), chip, chip);
+          D('hum-upd').textContent = 'Updated ' + fmtTime();
+        }
+      }
+
+      function updateGas(v) {
+        if (typeof v !== 'number') return;
+        D('gas-val').textContent = v.toFixed(0);
+        const pct = Math.min(100, (v / 2000) * 100); setBar(D('gas-bar'), pct);
+        const chip = v < 400 ? 'ok' : (v < 800 ? 'warn' : 'bad');
+        setChip(D('gas-chip'), chip, chip);
+        D('gas-upd').textContent = 'Updated ' + fmtTime();
+      }
+
+      function updateDist(cm) {
+        if (typeof cm !== 'number') return;
+        D('dist-val').textContent = cm.toFixed(1);
+        const pct = Math.min(100, (cm / 300) * 100); setBar(D('dist-bar'), pct);
+        const chip = cm < 20 ? 'bad' : (cm < 50 ? 'warn' : 'ok');
+        setChip(D('dist-chip'), chip, chip);
+        D('dist-upd').textContent = 'Updated ' + fmtTime();
+      }
+
+      function updateBool(id, chipId, updId, val, trueTxt='Detected', falseTxt='Clear') {
+        D(id).textContent = val ? trueTxt : falseTxt;
+        const cls = val ? 'bad' : 'ok';
+        setChip(D(chipId), cls, cls);
+        D(updId).textContent = 'Updated ' + fmtTime();
+      }
+
+      let ws; let reconnectTimer;
+      function connect() {
+        ws = new WebSocket(`ws://${location.host}/ws`);
+        ws.onopen = () => { setStatus('Connected', '#2ecc71'); if (reconnectTimer) clearTimeout(reconnectTimer); };
+        ws.onclose = () => { setStatus('Disconnected — retrying...', '#e67e22'); reconnectTimer = setTimeout(connect, 2000); };
+        ws.onerror = () => { setStatus('Error — retrying...', '#e74c3c'); try { ws.close(); } catch{} };
+        ws.onmessage = (evt) => {
+          try {
+            const {topic, payload} = JSON.parse(evt.data);
+            if (topic.endsWith('/dht')) { updateDHT(payload.temperature_c, payload.humidity); }
+            else if (topic.endsWith('/gas')) { updateGas(Number(payload.gas_raw)); }
+            else if (topic.endsWith('/ultrasonic')) { updateDist(Number(payload.distance_cm)); }
+            else if (topic.endsWith('/pir')) { updateBool('motion-val','motion-chip','motion-upd', !!payload.motion, 'Motion', 'No motion'); }
+            else if (topic.endsWith('/flame')) { updateBool('flame-val','flame-chip','flame-upd', !!payload.flame, 'Flame', 'Normal'); }
+            else if (topic.endsWith('/status/wifi')) {
+              D('wifi-ssid').textContent = payload.ssid || '--';
+              D('wifi-ip').textContent = payload.ip || '--';
+              const rssi = Number(payload.rssi);
+              if (!isNaN(rssi)) { D('wifi-rssi').textContent = rssi; setBar(D('wifi-bar'), Math.min(100, 2*(rssi+100))); D('wifi-upd').textContent = 'Updated ' + fmtTime(); }
+            }
+            else if (topic.endsWith('/status/system')) {
+              if (payload.uptime_s != null) D('sys-uptime').textContent = payload.uptime_s + ' s';
+              if (payload.free_heap != null) D('sys-heap').textContent = payload.free_heap + ' B';
+            }
+            else if (topic.endsWith('/speaker/state')) {
+              if (payload.url) D('spk-url').textContent = payload.url;
+              if (payload.volume != null) { D('spk-vol').textContent = payload.volume; setBar(D('spk-bar'), (payload.volume/21)*100); }
+              const st = payload.playing ? 'playing' : 'idle'; setChip(D('spk-state'), payload.playing ? 'ok':'muted', st); D('spk-upd').textContent = 'Updated ' + fmtTime();
+            }
+            else if (topic.endsWith('/mic/level')) {
+              if (payload.rms != null) { D('mic-rms').textContent = payload.rms.toFixed(2); setBar(D('mic-rms-bar'), Math.min(100, payload.rms*100)); }
+              if (payload.peak != null) { D('mic-peak').textContent = payload.peak.toFixed(2); setBar(D('mic-peak-bar'), Math.min(100, payload.peak*100)); }
+              D('mic-upd').textContent = 'Updated ' + fmtTime();
+            }
+            else if (topic.endsWith('/screen/state')) {
+              if (payload.index != null) { D('scr-index').textContent = payload.index; D('scr-upd').textContent = 'Updated ' + fmtTime(); }
+            }
+          } catch (e) { console.error('Bad message', evt.data); }
+        };
+      }
+      connect();
+
+      function sendCmd(path, payload){
+        if (!ws || ws.readyState !== WebSocket.OPEN) { return; }
+        ws.send(JSON.stringify({type:'cmd', path, payload}));
+      }
+      function sendVolume(v){ sendCmd('speaker/volume', {volume: Number(v)}); }
+      function playUrl(){ const u = D('url').value || 'http://stream.live.vc.bbcmedia.co.uk/bbc_radio_one'; sendCmd('speaker/play', {url:u, volume: Number(D('vol').value||12)}); }
+      function speak(){ const t = D('tts').value || 'Xin chào!'; sendCmd('speaker/say', {text:t, lang:'vi'}); }
+      function screenPlay(){ const idx = Number(D('scr-idx').value||1); sendCmd('screen/play', {index: idx}); }
+      function screenStop(){ sendCmd('screen/stop', {}); }
+      function arm(on){ sendCmd('alarm/arm', {armed: !!on}); }
+      function reboot(){ sendCmd('system/reboot', {}); }
+    </script>
+  </body>
+  </html>
